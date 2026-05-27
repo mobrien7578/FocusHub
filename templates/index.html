@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FocusHub Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <meta http-equiv="refresh" content="5">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #121212;
+            color: white;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #00d4ff;
+        }
+
+        .card-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 12px;
+            width: 220px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.4);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 18px;
+        }
+
+        .value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .present {
+            color: #00ff88;
+        }
+
+        .absent {
+            color: #ff4d4d;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: #1e1e1e;
+            color: white;
+        }
+
+        th, td {
+            border: 1px solid #444;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background: #2a2a2a;
+        }
+
+        canvas {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .recommendation {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>FocusHub Live Dashboard</h1>
+
+<div class="card-container">
+
+    <div class="card">
+        <h2>Temperature</h2>
+        <div class="value">{{ temp }}°C</div>
+    </div>
+
+    <div class="card">
+        <h2>Humidity</h2>
+        <div class="value">{{ humidity }}%</div>
+    </div>
+
+    <div class="card">
+        <h2>Focus Score</h2>
+        <div class="value">{{ focus_score }}/100</div>
+    </div>
+
+    <div class="card">
+        <h2>Presence</h2>
+
+        {% if presence %}
+            <div class="value present">Present</div>
+        {% else %}
+            <div class="value absent">Absent</div>
+        {% endif %}
+    </div>
+
+</div>
+
+<div class="recommendation">
+    <h2>AI Recommendation</h2>
+    <p>{{ recommendation }}</p>
+</div>
+
+<h2>Recent Readings</h2>
+
+<table>
+    <tr>
+        <th>Time</th>
+        <th>Temperature</th>
+        <th>Humidity</th>
+        <th>Focus Score</th>
+        <th>Presence</th>
+    </tr>
+
+    {% for row in rows %}
+    <tr>
+        <td>{{ row[0] }}</td>
+        <td>{{ row[1] }}</td>
+        <td>{{ row[2] }}</td>
+        <td>{{ row[3] }}</td>
+        <td>{{ row[4] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Live Chart</h2>
+
+<canvas id="myChart"></canvas>
+
+<script>
+
+const labels = {{ labels | safe }};
+const temps = {{ temps | safe }};
+const humidity = {{ humidities | safe }};
+const scores = {{ scores | safe }};
+
+const ctx = document.getElementById('myChart');
+
+new Chart(ctx, {
+    type: 'line',
+
+    data: {
+        labels: labels,
+
+        datasets: [
+            {
+                label: 'Temperature',
+                data: temps,
+                borderWidth: 2
+            },
+            {
+                label: 'Humidity',
+                data: humidity,
+                borderWidth: 2
+            },
+            {
+                label: 'Focus Score',
+                data: scores,
+                borderWidth: 2
+            }
+        ]
+    },
+
+    options: {
+        responsive: true
+    }
+});
+
+</script>
+
+</body>
+</html>

@@ -1,137 +1,133 @@
-from database import create_table, insert_reading, get_recent_readings
-from flask import Flask, request
+from flask import Flask, request, render_template
 from sense_hat import SenseHat
+from sensor_listener import SensorListener
+from database import create_table, insert_reading, get_recent_readings
+import time
 
 app = Flask(__name__)
 sense = SenseHat()
+
 create_table()
 
 presence_detected = False
+last_presence_time = 0
+
+
+def calculate_focus_score(temp, humidity, presence):
+    score = 100
+
+    if temp > 30:
+        score -= 20
+
+    if humidity > 70:
+        score -= 10
+
+    if not presence:
+        score -= 10
+
+    return max(score, 0)
+
+
+def get_advice(temp, humidity, focus_score, presence):
+    if not presence:
+        return "No user detected in the study area."
+
+    if temp > 30:
+        return "Room temperature is too high. Consider improving ventilation."
+
+    if humidity > 70:
+        return "Humidity is high. Consider opening a window or using ventilation."
+
+    if focus_score < 70:
+        return "Focus score is low. Consider adjusting the study environment."
+
+    return "Excellent study conditions."
+
+
+def handle_packet(data):
+    global presence_detected, last_presence_time
+
+    data = data.strip().lower()
+    print(f"Packet Tracer says: {data}")
+
+    if "true" in data or '"value":1' in data:
+        presence_detected = True
+        last_presence_time = time.time()
+        print("Presence detected from Packet Tracer.")
+        sense.show_letter("P", text_colour=(0, 255, 0))
+
+    elif "false" in data or '"value":0' in data:
+        print("False received, keeping presence active briefly.")
+
+
+listener = SensorListener(port=5001)
+listener.callback = handle_packet
+listener.start()
+
 
 @app.route("/")
 def home():
     global presence_detected
 
+    if presence_detected and time.time() - last_presence_time > 30:
+        presence_detected = False
+
     temp = sense.get_temperature()
     humidity = sense.get_humidity()
 
-    focus_score = 100
-
-    if temp > 30:
-        focus_score -= 20
-
-    if humidity > 70:
-        focus_score -= 10
-
-    if not presence_detected:
-        focus_score -= 10
-
-    advice = "Excellent study conditions"
-
-    if temp > 30:
-        advice = "Room temperature is too high"
-
-    elif humidity > 70:
-        advice = "Humidity levels are high"
-
-    elif focus_score < 70:
-        advice = "Focus score is low. Consider taking a short break"
-
-    if not presence_detected:
-        advice = "No user detected in study area"
-
-    # Sense HAT display
-    if presence_detected:
-        sense.show_letter("P", text_colour=(0, 255, 0))
-    else:
-        if focus_score >= 80:
-            sense.show_letter("G", text_colour=(0, 255, 0))
-        elif focus_score >= 50:
-            sense.show_letter("O", text_colour=(255, 255, 0))
-        else:
-            sense.show_letter("B", text_colour=(255, 0, 0))
-
+    focus_score = calculate_focus_score(temp, humidity, presence_detected)
     presence_text = "Present" if presence_detected else "Not detected"
+    advice = get_advice(temp, humidity, focus_score, presence_detected)
+
     insert_reading(temp, humidity, focus_score, presence_text)
     recent_readings = get_recent_readings()
 
-    return f"""
-    <meta http-equiv="refresh" content="5">
+    if presence_detected:
+        sense.show_letter("P", text_colour=(0, 255, 0))
+    elif focus_score >= 80:
+        sense.show_letter("G", text_colour=(0, 255, 0))
+    elif focus_score >= 50:
+        sense.show_letter("O", text_colour=(255, 255, 0))
+    else:
+        sense.show_letter("B", text_colour=(255, 0, 0))
 
-    <h1>FocusHub Live Dashboard</h1>
+    labels = list(reversed([row[0] for row in recent_readings]))
+    temp_data = list(reversed([row[1] for row in recent_readings]))
+    humidity_data = list(reversed([row[2] for row in recent_readings]))
+    focus_data = list(reversed([row[3] for row in recent_readings]))
 
-    <h2>Environment Readings</h2>
-    <p>Temperature: {temp:.1f}°C</p>
-    <p>Humidity: {humidity:.1f}%</p>
+    return render_template(
+        "index.html",
+        temp=round(temp, 1),
+        humidity=round(humidity, 1),
+        focus_score=focus_score,
+        presence=presence_detected,
+        recommendation=advice,
+        rows=recent_readings,
+        labels=labels,
+        temps=temp_data,
+        humidities=humidity_data,
+        scores=focus_data
+    )
 
-    <h2>Focus Score: {focus_score}/100</h2>
-
-    <h2>AI Recommendation</h2>
-    <p>{advice}</p>
-
-    <h2>Presence Status: {presence_text}</h2>
-
-    <h2>Recent Readings</h2>
-    <table border="1">
-        <tr>
-            <th>Time</th>
-            <th>Temperature</th>
-            <th>Humidity</th>
-            <th>Focus Score</th>
-            <th>Presence</th>
-        </tr>
-        {"".join([f"<tr><td>{row[0]}</td><td>{row[1]:.1f}</td><td>{row[2]:.1f}</td><td>{row[3]}</td><td>{row[4]}</td></tr>" for row in recent_readings])}
-    </table>
-
-    <h2>Temperature Chart</h2>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <canvas id="tempChart" width="600" height="250"></canvas>
-
-    <script>
-        const labels = {list(reversed([row[0] for row in recent_readings]))};
-        const tempData = {list(reversed([row[1] for row in recent_readings]))};
-        const humidityData = {list(reversed([row[2] for row in recent_readings]))};
-        const focusData = {list(reversed([row[3] for row in recent_readings]))};
-
-        new Chart(document.getElementById('tempChart'), {{
-            type: 'line',
-            data: {{
-                labels: labels,
-                datasets: [
-                    {{
-                        label: 'Temperature',
-                        data: tempData
-                    }},
-                    {{
-                        label: 'Humidity',
-                        data: humidityData
-                    }},
-                    {{
-                        label: 'Focus Score',
-                        data: focusData
-                    }}
-                ]
-            }}
-        }});
-    </script>
-    """
 
 @app.route("/presence")
 def presence():
-    global presence_detected
+    global presence_detected, last_presence_time
 
     state = request.args.get("state")
 
     if state == "true":
         presence_detected = True
-        print("Packet Tracer presence detected!")
+        last_presence_time = time.time()
+        print("Presence detected through Flask API.")
         sense.show_letter("P", text_colour=(0, 255, 0))
 
     elif state == "false":
-        presence_detected = False
-        print("Packet Tracer absence detected.")
-        sense.show_letter("A", text_colour=(255, 0, 0))
+        print("False received through Flask API, keeping presence active briefly.")
 
     return "OK"
 
-app.run(host="0.0.0.0", port=5000)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
