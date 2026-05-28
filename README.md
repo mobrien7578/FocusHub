@@ -4,9 +4,9 @@ FocusHub is an IoT smart study environment monitoring system developed using Ras
 
 The project monitors environmental conditions in a study space and provides real-time dashboard updates including temperature, humidity, focus score, and presence detection.
 
----
+----------------------------
 
-## Features
+# Features
 
 * Live Flask dashboard
 * Real-time temperature monitoring
@@ -18,9 +18,9 @@ The project monitors environmental conditions in a study space and provides real
 * Raspberry Pi integration
 * GitHub version control
 
----
+---------------------------
 
-## Technologies Used
+# Technologies Used
 
 * Python
 * Flask
@@ -31,9 +31,9 @@ The project monitors environmental conditions in a study space and provides real
 * Cisco Packet Tracer
 * GitHub
 
----
+----------------------------
 
-## System Architecture
+# System Architecture
 
 Packet Tracer sensors communicate with the Raspberry Pi using UDP networking.
 
@@ -51,9 +51,9 @@ SQLite Database
 Live Dashboard
 ```
 
----
+-----------------------
 
-## Project Structure
+# Project Structure
 
 ```text
 FocusHub/
@@ -72,13 +72,13 @@ FocusHub/
 ├── static/
 │   └── style.css
 │
-├── data/
+├─- data/
 │   └── focushub.db
 ```
 
----
+-----------------------
 
-## Installation
+# Installation
 
 Clone the repository:
 
@@ -105,9 +105,9 @@ Open the dashboard in a browser:
 http://192.168.0.38:5000
 ```
 
----
+------------------
 
-## Dashboard Features
+# Dashboard Features
 
 The dashboard displays:
 
@@ -118,17 +118,17 @@ The dashboard displays:
 * AI recommendations
 * Recent sensor readings
 
----
+----------------
 
-## IoT Integration
+# IoT Integration
 
 Cisco Packet Tracer push buttons and motion sensors simulate study room activity.
 
 Sensor data is sent to the Raspberry Pi using UDP and processed by the Flask application in real time.
 
----
+----------------
 
-## Future Improvements
+# Future Improvements
 
 * MQTT integration
 * Camera-based presence detection
@@ -136,10 +136,12 @@ Sensor data is sent to the Raspberry Pi using UDP and processed by the Flask app
 * Machine learning focus prediction
 * Cloud deployment
 
----
+------------------
 
-## Author
+# Author
 
 Michael O'Brien
+
+Student number: 20119095
 
 Computer Systems & Networks Project
