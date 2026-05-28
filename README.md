@@ -58,24 +58,21 @@ Live Dashboard
 ```text
 FocusHub/
 │
-├── app.py
-├── database.py
-├── focus_logic.py
-├── sensor_listener.py
-├── requirements.txt
-├── README.md
-├── .gitignore
+├── app.py                 # Main Flask dashboard app
+├── database.py            # Stores sensor readings
+├── sensor_listener.py     # Receives Packet Tracer data
+├── requirements.txt       # Project libraries
+├── README.md              # Project information
 │
 ├── templates/
-│   └── index.html
+│   └── index.html         # Dashboard webpage
 │
 ├── static/
-│   └── style.css
+│   └── style.css          # Dashboard styling
 │
-├─- data/
-│   └── focushub.db
+├── data/
+│   └── focushub.db        # SQLite database
 ```
-
 -----------------------
 
 # Installation
