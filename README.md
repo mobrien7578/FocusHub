@@ -134,6 +134,9 @@ Sensor data is sent to the Raspberry Pi using UDP and processed by the Flask app
 * Cloud deployment
 
 ------------------
+#Demo Video
+FocusHub demo: (https://youtu.be/Y2Usotr4GdI)
+------------------
 
 # Author
 
